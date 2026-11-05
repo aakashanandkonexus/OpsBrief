@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KRG Flows Handover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Two flows (Italy agency / Hartree buy-back) in one doc. Navy masthead; sticky left rail with a flow switch on top; scroll-spied document per flow. Accent swaps per flow. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --surface-2:#f6f8fb; --inset:#eef2f7;
+  --border:#d7dee7; --border-strong:#c2cdd9;
+  --ink:#162430; --ink-2:#48596a; --ink-3:#7b8a99;
+  --brand:#1f4e79; --brand-2:#15385a;
+  --accent:#b06a24; --accent-soft:#f3e4d2;
+  --good:#2b8a58; --good-soft:#dcefe3;
+  --warn:#9a6a10; --warn-soft:#f4e9cf;
+  --bad:#bc4038; --bad-soft:#f6ddd9;
+  --header-bg:#15385a; --on-header:#e9f1f9; --on-header-dim:#a9c3dc;
+  --shadow:0 1px 2px rgba(17,34,51,.06),0 4px 16px rgba(17,34,51,.06);
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --disp:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+:root[data-flow="hartree"]{ --accent:#17707f; --accent-soft:#d7eef1; }
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f151c; --surface:#161f29; --surface-2:#1b2530; --inset:#121a22;
+  --border:#2a3744; --border-strong:#38485a;
+  --ink:#e7edf4; --ink-2:#a9b7c5; --ink-3:#73828f;
+  --brand:#6aa6dd; --brand-2:#8fc0ea;
+  --accent:#d79553; --accent-soft:#3a2b1b;
+  --good:#54b485; --good-soft:#182c20;
+  --warn:#d2a63f; --warn-soft:#2e2510;
+  --bad:#e3756b; --bad-soft:#371d1a;
+  --header-bg:#0c1319; --on-header:#e7eef6; --on-header-dim:#8ea2b6;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.28);
+  color-scheme:dark;
+}
+:root[data-flow="hartree"]:not([data-theme="light"]){ --accent:#4bb3c4; --accent-soft:#113038; }}
+:root[data-theme="dark"]{
+  --bg:#0f151c; --surface:#161f29; --surface-2:#1b2530; --inset:#121a22;
+  --border:#2a3744; --border-strong:#38485a;
+  --ink:#e7edf4; --ink-2:#a9b7c5; --ink-3:#73828f;
+  --brand:#6aa6dd; --brand-2:#8fc0ea;
+  --accent:#d79553; --accent-soft:#3a2b1b;
+  --good:#54b485; --good-soft:#182c20;
+  --warn:#d2a63f; --warn-soft:#2e2510;
+  --bad:#e3756b; --bad-soft:#371d1a;
+  --header-bg:#0c1319; --on-header:#e7eef6; --on-header-dim:#8ea2b6;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.28);
+  color-scheme:dark;
+}
+:root[data-theme="dark"][data-flow="hartree"]{ --accent:#4bb3c4; --accent-soft:#113038; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;font-size:15px;
+  -webkit-font-smoothing:antialiased;letter-spacing:.005em;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--header-bg);z-index:60}
+h1,h2,h3,h4{font-family:var(--disp);margin:0;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}
+a{color:var(--accent)}
+.mono{font-family:var(--mono);font-variant-ligatures:none}
+img{max-width:100%}
+
+.masthead{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--header-bg);color:var(--on-header);
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.masthead-in{max-width:1220px;margin:0 auto;display:flex;align-items:center;gap:16px;padding-block:11px;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.brandmark{display:flex;align-items:center;gap:11px;min-width:0}
+.hex{width:30px;height:30px;flex:none}
+.wordmark{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.02em;line-height:1;color:#fff}
+.wordmark span{color:var(--on-header-dim);font-weight:600}
+.mast-sub{font-size:12px;color:var(--on-header-dim);line-height:1.2;margin-top:2px;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mast-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex:none}
+.conf-chip{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#f3d9c3;
+  border:1px solid rgba(243,217,195,.4);border-radius:999px;padding:4px 9px;white-space:nowrap}
+.theme-toggle{display:flex;border:1px solid rgba(255,255,255,.18);border-radius:999px;overflow:hidden}
+.theme-toggle button{appearance:none;background:transparent;border:0;color:var(--on-header-dim);font-family:var(--sans);
+  font-size:11px;font-weight:600;padding:5px 9px;cursor:pointer;letter-spacing:.03em}
+.theme-toggle button[aria-pressed="true"]{background:rgba(255,255,255,.16);color:#fff}
+
+.shell{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:30px;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 92px);
+  overflow:auto;padding:16px 0 40px}
+.flow-tabs{display:flex;flex-direction:column;gap:6px;padding:0 6px 14px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.flow-tab{appearance:none;cursor:pointer;text-align:left;border:1px solid var(--border);background:var(--surface);
+  border-radius:10px;padding:9px 12px;font-family:var(--sans);color:var(--ink-2);display:flex;flex-direction:column;gap:2px}
+.flow-tab .ft-t{font-weight:700;font-size:13px;color:var(--ink);display:flex;align-items:center;gap:7px}
+.flow-tab .ft-s{font-size:11px;color:var(--ink-3)}
+.flow-tab .ft-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.flow-tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.flow-tab:hover{border-color:var(--border-strong)}
+.rail-h{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);padding:0 12px 7px}
+.rail a{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2);text-decoration:none;padding:7px 12px;
+  border-radius:8px;font-weight:500;border-left:2px solid transparent}
+.rail a .rn{font-family:var(--mono);font-size:11px;color:var(--ink-3);min-width:16px}
+.rail a:hover{background:var(--surface-2);color:var(--ink)}
+.rail a.active{background:var(--accent-soft);color:var(--ink);border-left-color:var(--accent);font-weight:600}
+.rail a.active .rn{color:var(--accent)}
+
+main{min-width:0;padding:26px 0 90px}
+section{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 82px);margin-bottom:46px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.sec-no{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.04em}
+.sec-head h2{font-size:25px;font-weight:700}
+.sec-intro{color:var(--ink-2);margin:8px 0 20px;max-width:66ch}
+.flow-banner{display:flex;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;margin-bottom:26px}
+.flow-banner .fb-dot{width:11px;height:11px;border-radius:50%;flex:none}
+.flow-banner .fb-t{font-family:var(--disp);font-weight:700;font-size:15px}
+.flow-banner .fb-s{font-size:12.5px;color:var(--ink-2)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:3px}
+.card h3.withtag{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card .lead{color:var(--ink-2);font-size:14px;margin-bottom:12px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;
+  border-radius:999px;text-transform:uppercase;white-space:nowrap}
+.pill.brand{background:var(--accent-soft);color:var(--accent)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.flat{background:var(--inset);color:var(--ink-2)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px 15px;box-shadow:var(--shadow)}
+.stat .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700}
+.stat .v{font-family:var(--disp);font-weight:700;font-size:21px;margin-top:5px;line-height:1.1}
+.stat .v small{font-family:var(--sans);font-weight:600;font-size:12px;color:var(--ink-2)}
+.stat .n{font-size:11.5px;color:var(--ink-2);margin-top:3px}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:0}
+.kv>div{display:contents}
+.kv dt{font-weight:600;color:var(--ink-2);font-size:13px;padding:8px 14px 8px 0;border-bottom:1px solid var(--border)}
+.kv dd{margin:0;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;text-align:right}
+.kv>div:last-child dt,.kv>div:last-child dd{border-bottom:0}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:11px;box-shadow:var(--shadow);background:var(--surface)}
+table.data{border-collapse:collapse;width:100%;font-size:13px;min-width:min-content}
+table.data th,table.data td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:top;white-space:nowrap}
+table.data thead th{background:var(--brand-2);color:#eef4fa;font-weight:600;font-size:11px;letter-spacing:.05em;
+  text-transform:uppercase;position:sticky;top:0;white-space:nowrap}
+table.data tbody tr:hover{background:var(--surface-2)}
+table.data td.wrap{white-space:normal;min-width:200px}
+table.data td .mono,table.data .mono{font-size:12.5px}
+table.data .num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12.5px}
+table.data tfoot td{font-weight:700;background:var(--inset);border-top:2px solid var(--border-strong)}
+.cols-note{font-size:12px;color:var(--ink-3);margin-top:8px}
+.coldef td:first-child{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:500;white-space:nowrap}
+.coldef td:last-child{white-space:normal;color:var(--ink-2)}
+
+ol.steps{margin:0;padding-left:0;list-style:none;counter-reset:s}
+ol.steps li{position:relative;padding:3px 0 3px 30px;counter-increment:s;color:var(--ink-2);font-size:14px}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:2px;width:20px;height:20px;background:var(--inset);
+  color:var(--ink);border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+ul.ticks{margin:0;padding:0;list-style:none}
+ul.ticks li{position:relative;padding:4px 0 4px 24px;color:var(--ink-2);font-size:14px}
+ul.ticks li::before{content:"";position:absolute;left:3px;top:11px;width:7px;height:7px;border-radius:2px;background:var(--accent)}
+
+.ref{display:inline-flex;align-items:center;gap:7px;background:var(--inset);border:1px solid var(--border);border-radius:7px;
+  padding:3px 4px 3px 9px;font-family:var(--mono);font-size:12.5px;color:var(--ink);max-width:100%}
+.ref .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:5px;
+  font-family:var(--sans);font-size:10.5px;font-weight:600;padding:3px 7px;cursor:pointer;flex:none;letter-spacing:.02em}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.ok{border-color:var(--good);color:var(--good)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;padding:10px 13px;
+  font-size:13px;color:var(--ink);margin-top:12px}
+.callout.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.callout.tbc{border-left-color:var(--warn);background:var(--warn-soft)}
+.callout b{font-weight:700}
+
+.stepper-nav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}
+.stepper-nav button{flex:none;appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:9px 13px;text-align:left;min-width:134px;font-family:var(--sans);color:var(--ink-2)}
+.stepper-nav button .sn{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:600}
+.stepper-nav button .st{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin-top:3px;line-height:1.25;white-space:normal}
+.stepper-nav button:hover{border-color:var(--border-strong)}
+.stepper-nav button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.stepper-nav button[aria-selected="true"] .sn{color:var(--accent)}
+.step-panel .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.step-panel h3{font-size:18px;margin-bottom:6px}
+.doc-list{display:grid;gap:9px;margin-top:4px}
+.doc-item{display:flex;gap:11px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
+.doc-item .dnum{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--accent);border-radius:6px;
+  min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.doc-item .dbody{min-width:0}
+.doc-item .dname{font-weight:600;font-size:13.5px}
+.doc-item .dloc{font-size:12px;color:var(--ink-2);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+.progress-wrap{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.progress{flex:1;min-width:180px;height:9px;background:var(--inset);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.progress .bar{height:100%;background:linear-gradient(90deg,var(--brand),var(--accent));width:0;transition:width .3s}
+.progress-label{font-family:var(--mono);font-size:13px;font-weight:600;white-space:nowrap}
+.btn-ghost{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--ink-2);border-radius:8px;
+  font-family:var(--sans);font-size:12.5px;font-weight:600;padding:6px 12px;cursor:pointer}
+.btn-ghost:hover{border-color:var(--bad);color:var(--bad)}
+.check-row{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--border)}
+.check-row:last-child{border-bottom:0}
+.check-row.reserved{opacity:.5}
+.check-row input[type=checkbox]{appearance:none;width:21px;height:21px;border:2px solid var(--border-strong);border-radius:6px;
+  cursor:pointer;flex:none;margin-top:1px;position:relative;background:var(--surface)}
+.check-row input[type=checkbox]:checked{background:var(--good);border-color:var(--good)}
+.check-row input[type=checkbox]:checked::after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;
+  border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.check-row input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check-row .cl-num{font-family:var(--mono);font-size:11px;color:var(--ink-3);font-weight:600}
+.check-row .cl-title{font-weight:600;font-size:14.5px;margin:1px 0 2px}
+.check-row.done .cl-title{color:var(--ink-3);text-decoration:line-through}
+.check-row .cl-desc{font-size:13px;color:var(--ink-2)}
+
+.contact-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ctbtn{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:8px;
+  font-family:var(--sans);font-size:12.5px;font-weight:600;padding:7px 12px;cursor:pointer}
+.ctbtn:hover{border-color:var(--accent);color:var(--accent)}
+.ctbtn.ok{border-color:var(--good);color:var(--good)}
+.contact-row{display:flex;gap:12px;align-items:center;padding:9px 2px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.contact-row:last-child{border-bottom:0}
+.cx-role{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:5px;flex:none}
+.cx-role.to{background:var(--accent);color:#fff}
+.cx-role.cc{background:var(--inset);color:var(--ink-2);border:1px solid var(--border)}
+.cx-name{font-weight:600;font-size:13.5px;min-width:0}
+.cx-org{font-size:11.5px;color:var(--ink-3)}
+.cx-mail{margin-left:auto;display:flex;align-items:center;gap:7px;min-width:0}
+.cx-mail .em{font-family:var(--mono);font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.search-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search-in{flex:1;min-width:200px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:9px 12px}
+.search-in input{border:0;background:transparent;color:var(--ink);font-family:var(--sans);font-size:14px;width:100%;outline:none}
+.search-in svg{flex:none;color:var(--ink-3)}
+.search-meta{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.search-meta b{color:var(--ink);font-family:var(--mono)}
+tr.hide{display:none}
+.limit-bar{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;min-width:2px}
+
+.flow{display:grid;gap:12px}
+.flow-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.flow-node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.flow-node .fn-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.flow-node .fn-t{font-family:var(--disp);font-weight:700;font-size:14px}
+.flow-node .fn-tag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);
+  background:var(--accent-soft);border-radius:5px;padding:2px 6px}
+.flow-node ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--ink-2)}
+.flow-arrow{text-align:center;color:var(--ink-3);font-size:18px;line-height:1}
+
+.footnote{font-size:12px;color:var(--ink-3);margin-top:28px;padding-top:16px;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+[data-flow-doc]{display:none}
+[data-flow-doc].on{display:block}
+
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);font-size:13px;font-weight:600;padding:10px 16px;border-radius:999px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr;gap:0}
+  .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 60px);z-index:40;max-height:none;overflow:visible;
+    background:var(--bg);margin:0 -4px;padding:9px 4px;border-bottom:1px solid var(--border)}
+  .flow-tabs{flex-direction:row;border-bottom:0;padding:0 2px 8px;margin-bottom:8px}
+  .flow-tab{flex:1}
+  .rail-h{display:none}
+  .rail nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin}
+  .rail a{flex:none;border-left:0;border:1px solid var(--border);border-radius:999px;padding:6px 12px;white-space:nowrap}
+  .rail a.active{border-color:var(--accent)}
+  main{padding-top:18px}
+  .g2,.g3,.flow-row{grid-template-columns:1fr}
+  .mast-sub{display:none}
+}
+@media (max-width:560px){.masthead-in{gap:10px}.wordmark{font-size:17px}.conf-chip{display:none}.cx-mail{margin-left:0;width:100%}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="brandmark">
+      <svg class="hex" viewBox="0 0 40 40" aria-hidden="true"><polygon points="20,3 34,11 34,29 20,37 6,29 6,11" fill="#2f6bb0" stroke="#fff" stroke-width="1.4"/><polygon points="20,10 28,14.5 28,25.5 20,30 12,25.5 12,14.5" fill="#15385a"/></svg>
+      <div style="min-width:0">
+        <div class="wordmark">KRG <span>/ Flows Handover</span></div>
+        <div class="mast-sub" id="mastSub">Italy agency &amp; Hartree buy-back &middot; Aluminium billets &amp; wire rod</div>
+      </div>
+    </div>
+    <div class="mast-right">
+      <span class="conf-chip">Confidential</span>
+      <div class="theme-toggle" role="group" aria-label="Theme"><button data-theme-set="light">Light</button><button data-theme-set="auto">Auto</button><button data-theme-set="dark">Dark</button></div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="flow-tabs" id="flowTabs">
+      <button class="flow-tab" data-flow-pick="italy" aria-selected="true"><span class="ft-t"><span class="ft-dot" style="background:#b06a24"></span>Italy Flow</span><span class="ft-s">Agency · Vedanta – KRG – Victoria</span></button>
+      <button class="flow-tab" data-flow-pick="hartree" aria-selected="false"><span class="ft-t"><span class="ft-dot" style="background:#17707f"></span>Hartree Rod Flow</span><span class="ft-s">Buy-back · KAI – Hartree – KRG</span></button>
+    </div>
+    <nav id="railNav"></nav>
+  </aside>
+  <main><div id="doc"></div></main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+"use strict";
+var F=window.__F={};
+var LS=F.LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+var esc=F.esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+var fmt0=new Intl.NumberFormat('en-GB',{maximumFractionDigits:0});
+var fmt2=new Intl.NumberFormat('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+F.fmt0=fmt0;F.fmt2=fmt2;
+
+/* toast + copy */
+var toast=document.getElementById('toast'),tT;
+function showToast(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tT);tT=setTimeout(function(){toast.classList.remove('show')},1500);}
+F.showToast=showToast;
+F.copyText=function(t,cb){function ok(){if(cb)cb();showToast('Copied');}
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok).catch(fb);}else fb();
+ function fb(){try{var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);ok();}catch(e){showToast('Copy failed');}}};
+document.addEventListener('click',function(e){var b=e.target.closest('[data-copy]');if(!b)return;
+ F.copyText(b.getAttribute('data-copy'),function(){var o=b.textContent;b.classList.add('ok');b.textContent='Copied ✓';setTimeout(function(){b.classList.remove('ok');b.textContent=o;},1200);});});
+
+/* theme */
+var root=document.documentElement;
+function applyTheme(m){if(m==='auto')root.removeAttribute('data-theme');else root.setAttribute('data-theme',m);
+ document.querySelectorAll('[data-theme-set]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-theme-set')===m?'true':'false');});}
+applyTheme(LS.get('if_theme')||'auto');
+document.querySelectorAll('[data-theme-set]').forEach(function(b){b.addEventListener('click',function(){var m=b.getAttribute('data-theme-set');LS.set('if_theme',m);applyTheme(m);});});
+
+/* shared builders */
+function sec(id,num,title,intro,inner){return '<section id="'+id+'"><div class="sec-head"><span class="sec-no">'+num+'</span><h2>'+esc(title)+'</h2></div>'+(intro?'<p class="sec-intro">'+intro+'</p>':'')+inner+'</section>';}
+F.sec=sec;
+function dtable(headers,rows,opts){opts=opts||{};var h='<div class="table-wrap"><table class="data'+(opts.cls?' '+opts.cls:'')+'"><thead><tr>'+headers.map(function(c){return '<th'+(c.r?' style="text-align:right"':'')+'>'+esc(c.t||c)+'</th>';}).join('')+'</tr></thead><tbody>';
+ rows.forEach(function(r){h+='<tr>'+r.map(function(c){if(c&&c.html!=null)return '<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+c.html+'</td>';return '<td>'+esc(c)+'</td>';}).join('')+'</tr>';});
+ h+='</tbody>'+(opts.foot?'<tfoot><tr>'+opts.foot.map(function(c){return '<td'+(c&&c.cls?' class="'+c.cls+'"':'')+'>'+((c&&c.html!=null)?c.html:esc(c))+'</td>';}).join('')+'</tr></tfoot>':'')+'</table></div>';return h;}
+F.dtable=dtable;
+function coldef(rows){return dtable(['Column','Description'],rows.map(function(r){return [r[0],r[1]];}),{cls:'coldef'});}
+F.coldef=coldef;
+function kv(rows){var h='<dl class="kv">';rows.forEach(function(r){h+='<div><dt>'+esc(r[0])+'</dt><dd>'+esc(r[1])+'</dd></div>';});return h+'</dl>';}
+F.kv=kv;
+function stepsOl(items){return '<ol class="steps">'+items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ol>';}
+F.stepsOl=stepsOl;
+function ticks(items){return '<ul class="ticks">'+items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul>';}
+F.ticks=ticks;
+function pathRef(disp,full){return '<span class="ref"><span class="txt">'+esc(disp)+'</span><button class="copy-btn" data-copy="'+esc(full)+'">Copy path</button></span>';}
+F.pathRef=pathRef;
+var searchSVG='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+F.searchSVG=searchSVG;
+
+/* contacts list + copy-all */
+F.contactsCard=function(title,tag,list,opts){opts=opts||{};
+ var h='<div class="card"><h3 class="withtag">'+esc(title)+(tag?' <span class="pill flat">'+esc(tag)+'</span>':'')+'</h3>';
+ if(opts.lead)h+='<p class="lead">'+opts.lead+'</p>';
+ if(opts.tools)h+='<div class="contact-tools"><button class="ctbtn" data-ml="TO">Copy all TO</button><button class="ctbtn" data-ml="CC">Copy all CC</button><button class="ctbtn" data-ml="ALL">Copy TO + CC</button></div>';
+ h+='<div class="cl-list">'+list.map(function(c){return '<div class="contact-row"><span class="cx-role '+c[0].toLowerCase()+'">'+c[0]+'</span><span class="cx-name">'+esc(c[1])+' <span class="cx-org">'+esc(c[2])+'</span></span><span class="cx-mail"><span class="em">'+esc(c[3])+'</span><button class="copy-btn" data-copy="'+esc(c[3])+'">Copy</button></span></div>';}).join('')+'</div></div>';
+ return h;};
+F.wireContactCopyAll=function(scope,list){scope.querySelectorAll('[data-ml]').forEach(function(b){b.addEventListener('click',function(){
+ var role=b.getAttribute('data-ml');
+ var to=list.filter(function(c){return c[0]==='TO'}).map(function(c){return c[3]}).join('; ');
+ var cc=list.filter(function(c){return c[0]==='CC'}).map(function(c){return c[3]}).join('; ');
+ var t=role==='TO'?to:role==='CC'?cc:(to+'; '+cc);
+ F.copyText(t,function(){var o=b.textContent;b.classList.add('ok');b.textContent='Copied ✓';setTimeout(function(){b.classList.remove('ok');b.textContent=o;},1200);});});});};
+
+/* files search card */
+F.filesSection=function(id,num,title,intro,files){
+ var inner='<div class="search-bar"><label class="search-in">'+searchSVG+'<input type="text" placeholder="Search documents…" autocomplete="off" data-filesearch="'+id+'"></label><span class="search-meta"><b data-filecount="'+id+'">0</b> documents</span></div><div class="grid" style="gap:10px" data-filelist="'+id+'"></div>';
+ return {html:sec(id,num,title,intro,inner),files:files};};
+F.wireFiles=function(scope,id,files){
+ var list=scope.querySelector('[data-filelist="'+id+'"]'),input=scope.querySelector('[data-filesearch="'+id+'"]'),count=scope.querySelector('[data-filecount="'+id+'"]');
+ function draw(q){q=(q||'').trim().toLowerCase();var shown=0;
+  list.innerHTML=files.map(function(f){if(q&&(f[0]+' '+f[1]).toLowerCase().indexOf(q)===-1)return '';shown++;
+   return '<div class="card" style="padding:12px 14px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="min-width:0;flex:1"><div style="font-weight:700;font-size:14px">'+esc(f[0])+'</div><div class="mono" style="font-size:12px;color:var(--ink-2);margin-top:3px;word-break:break-word">'+esc(f[1])+'</div></div><button class="copy-btn" data-copy="'+esc(f[1])+'" style="flex:none">Copy path</button></div></div>';}).join('')||'<div class="card" style="color:var(--ink-3);text-align:center;padding:22px">No documents match.</div>';
+  count.textContent=shown;}
+ input.addEventListener('input',function(){draw(this.value);});draw('');};
+
+/* stepper */
+F.stepperSection=function(id,num,title,intro,steps){
+ return {html:sec(id,num,title,intro,'<div class="stepper-nav" data-stepnav="'+id+'"></div><div class="card step-panel" data-steppanel="'+id+'"></div>'),steps:steps};};
+F.wireStepper=function(scope,id,steps){
+ var nav=scope.querySelector('[data-stepnav="'+id+'"]'),panel=scope.querySelector('[data-steppanel="'+id+'"]'),cur=0;
+ steps.forEach(function(s,i){var b=document.createElement('button');b.setAttribute('aria-selected',i===0?'true':'false');b.innerHTML='<span class="sn">'+esc(s.n)+'</span><span class="st">'+esc(s.t)+'</span>';b.addEventListener('click',function(){cur=i;draw();});nav.appendChild(b);});
+ function draw(){Array.prototype.forEach.call(nav.children,function(c,i){c.setAttribute('aria-selected',i===cur?'true':'false');});
+  var s=steps[cur],h='<div class="badge-row"><span class="pill flat">'+esc(s.from)+'</span>'+(s.pills||[]).map(function(p){return '<span class="pill '+p[0]+'">'+esc(p[1])+'</span>';}).join('')+'</div>';
+  h+='<h3>'+esc(s.n)+' — '+esc(s.t)+'</h3><p class="lead" style="margin-bottom:10px">'+s.body+'</p>';
+  if(s.docs&&s.docs.length){h+='<div class="doc-list">';s.docs.forEach(function(d,di){h+='<div class="doc-item"><span class="dnum">'+(di+1)+'</span><div class="dbody"><div class="dname">'+esc(d.name)+'</div>'+(d.loc?'<div class="dloc"><span class="ref"><span class="txt mono">'+esc(d.loc)+'</span>'+(d.copy?'<button class="copy-btn" data-copy="'+esc(d.copy)+'">Copy</button>':'')+'</span></div>':'')+'</div></div>';});h+='</div>';}
+  if(s.action)h+='<div class="callout"><b>Action.</b> '+s.action+'</div>';
+  if(s.note)h+='<div class="callout'+(s.note[0]?' '+s.note[0]:'')+'">'+s.note[1]+'</div>';
+  panel.innerHTML=h;}
+ draw();};
+
+/* checklist */
+F.checklistSection=function(id,num,title,intro,items){
+ return {html:sec(id,num,title,intro,'<div class="card"><div class="progress-wrap"><span class="progress-label" data-ckl="'+id+'">0 / 0</span><div class="progress"><div class="bar" data-ckbar="'+id+'"></div></div><button class="btn-ghost" data-ckreset="'+id+'">Reset</button></div><div data-cklist="'+id+'"></div></div>'),items:items,key:'if_check_'+id};};
+F.wireChecklist=function(scope,cfg){
+ var list=scope.querySelector('[data-cklist="'+cfg.id+'"]'),bar=scope.querySelector('[data-ckbar="'+cfg.id+'"]'),lbl=scope.querySelector('[data-ckl="'+cfg.id+'"]');
+ var st={};try{st=JSON.parse(LS.get(cfg.key)||'{}');}catch(e){}var active=[];
+ cfg.items.forEach(function(c,i){var row=document.createElement('div');row.className='check-row'+(c.reserved?' reserved':'');
+  if(c.reserved){row.innerHTML='<div style="width:21px;height:21px;flex:none;border:2px dashed var(--border);border-radius:6px;margin-top:1px"></div><div><div class="cl-num">'+(i+1)+'</div><div class="cl-title">(Reserved)</div></div>';}
+  else{active.push(i);row.innerHTML='<input type="checkbox" id="'+cfg.id+'k'+i+'" data-ci="'+i+'"'+(st[i]?' checked':'')+'><div><label for="'+cfg.id+'k'+i+'" style="cursor:pointer;display:block"><div class="cl-num">Step '+(i+1)+'</div><div class="cl-title">'+esc(c.t)+'</div><div class="cl-desc">'+esc(c.d)+'</div></label></div>';if(st[i])row.classList.add('done');}
+  list.appendChild(row);});
+ function refresh(){var d=0;active.forEach(function(i){if(st[i])d++;});bar.style.width=(active.length?d/active.length*100:0)+'%';lbl.textContent=d+' / '+active.length;}
+ list.addEventListener('change',function(e){var cb=e.target.closest('input');if(!cb)return;var i=cb.getAttribute('data-ci');st[i]=cb.checked;cb.closest('.check-row').classList.toggle('done',cb.checked);LS.set(cfg.key,JSON.stringify(st));refresh();});
+ scope.querySelector('[data-ckreset="'+cfg.id+'"]').addEventListener('click',function(){st={};LS.del(cfg.key);list.querySelectorAll('input').forEach(function(cb){cb.checked=false;cb.closest('.check-row').classList.remove('done');});refresh();showToast('Checklist reset');});
+ refresh();};
+F.FLOWS={};
+})();
+</script>
+<script>
+(function(){
+var F=window.__F,esc=F.esc,sec=F.sec,dtable=F.dtable,coldef=F.coldef,kv=F.kv,stepsOl=F.stepsOl,ticks=F.ticks,pathRef=F.pathRef;
+
+var NAV=[['it-overview','01','Overview'],['it-buyside','02','Buy-side'],['it-localops','03','Local Ops · Italy'],['it-sellside','04','Sell-side'],['it-receivables','05','Receivables'],['it-payables','06','Payables'],['it-checklist','07','Monthly checklist'],['it-trackers','08','Tracker templates'],['it-contacts','09','Contacts'],['it-files','10','Files & locations'],['it-customers','11','Customer credit book']];
+
+var STEINWEG=[['TO','Pierangela Cuccuru','Steinweg','p.cuccuru@it.steinweg.com'],['TO','Simone Larghero','Steinweg','s.larghero@it.steinweg.com'],['CC','Roberto Venti','Steinweg','r.venti@it.steinweg.com'],['CC','Federica Camilla','Steinweg','f.camilla@it.steinweg.com'],['CC','Andrea Piccardo','Steinweg','a.piccardo@it.steinweg.com'],['CC','Victoria Operation','Victoria','victoria.operation@victoria.ge.it'],['CC','Nicoletta Montecucco','Victoria','nicoletta.montecucco@victoria.ge.it'],['CC','Metal Ops','KRG','MetalOps@konexusresources.com'],['CC','Lucas Darcie','KRG','Lucas.Darcie@konexusresources.com']];
+var FILES=[['Proforma Invoice','KRG OneDrive → KRG OneDrive → Workbooks → Invoice Sheet → Sheet: "AA Italy F Inv"'],['Packing List','KRG OneDrive → KRG OneDrive → Workbooks → Invoice Sheet → Sheet: "AA Italy PL"'],['HSBC Release Letter','KRG OneDrive → KRG OneDrive → Metals → METALS 2025 → Ali Billets → VEDANTA → ITALY → 5. HSBC → [Month Year]'],['Customs Mandate','KRG OneDrive → KRG OneDrive → Metals → METALS 2025 → Ali Billets → VEDANTA → ITALY → 3. STEINWEG → [Month]'],['Release Table','Italy_Flow.xlsm → Sheet: "Ex - Release Table"'],['Arrivals Tracker','Italy_Flow.xlsm → Sheet: "Arrivals"'],['Releases Tracker','Italy_Flow.xlsm → Sheet: "Releases"'],['Pricing Sheet','Italy_Flow.xlsm → Sheet: "Pricing"'],['AR Tracker','Italy_Flow.xlsm → Sheet: "AR"'],['AP Tracker','Italy_Flow.xlsm → Sheet: "AP"'],['Operational Flow','Italy_Flow.xlsm → Sheet: "Flow"'],['Steinweg Email Distro','Italy_Flow.xlsm → Sheet: "Ex - Stwg Email"']];
+var CUST=[['ALEX SPA','IT00564050771',1750000],['ALL.CO','IT00198440505',1000000],['ALL.IT','IT02653240594',1500000],['ALUTITAN','SM02240',650000],['ANODALL','IT03397980230',350000],['APS AROSIO','IT00187790316',1500000],['BODEGA','IT00212760169',1600000],['CERBONE','IT05581171211',1500000],['DE ANGELI','IT03585010287',2000000],['ESTRAL','IT00579550989',1500000],['ESTRUSIONE','IT02168370985',500000],['ETA SPA','IT00337000947',548000],['GASTALDELLO','IT01934500230',1500000],['GEAL','IT00784090482',500000],['HTA','IT01464580461',1600000],['INDINVEST','IT01420630590',1500000],['INTALS','IT05860300150',1000000],['IRCE','IT00707431201',2000000],['MV EXTRUSION','IT00503900771',1000000],['NOVELLINI SRL','IT00690100201',0],['PANDOLFO','IT02236890287',3520000],['PASTURI','IT02230470987',1500000],['PFA','IT03343020131',1600000],['PROFILATI SPA','IT00642201206',3000000],['SEPAL','IT00311480172',3750000],['STEMIN','IT02681790164',1000000],['TRAFILERIE ALLUMINIO ALEXIA SPA','IT02860650163',2500000],['TRAFILERIE EMILIANE SUD SPA','IT00749360673',1920000],['TRATOS CAVI SPA','IT00861640514',700000],['VIBA','IT03190240170',1200000],['LASA','IT00934970369',500000]];
+var STEPS=[
+ {n:'Step 1',t:'Storage confirmation from Steinweg',from:'Steinweg',pills:[['flat','Arrivals sheet']],body:'On arrival, Steinweg releases cargo against the shipping line’s Delivery Order (D/O), warehouses it, and issues a Storage Confirmation in the name of KRG / the financing party (HSBC). These carry the container-wise PB numbers used to allocate material.',action:'Enter the Storage Confirmation into the Arrivals tracker — including the PB numbers, which drive the later release.',docs:[],note:null},
+ {n:'Step 2',t:'Request release from HSBC',from:'KRG → HSBC',pills:[['warn','Gate before customs']],body:'Before any material can be customs-cleared and delivered, KRG must obtain HSBC release approval. Three documents are prepared:',docs:[{name:'Release Table (21 cols)',loc:'Italy_Flow.xlsm → “Ex - Release Table”',copy:'Italy_Flow.xlsm → Sheet: "Ex - Release Table"'},{name:'Proforma Invoice',loc:'Invoice Sheet → “AA Italy F Inv”',copy:'KRG OneDrive → KRG OneDrive → Workbooks → Invoice Sheet → Sheet: "AA Italy F Inv"'},{name:'Release Request Letter',loc:'… ITALY → 5. HSBC → [Month Year]',copy:'KRG OneDrive → KRG OneDrive → Metals → METALS 2025 → Ali Billets → VEDANTA → ITALY → 5. HSBC → [Month Year]'}],note:['','Proforma price = applicable QP (Avg M-0 / Avg 1st–25th M-0) on prevailing LME + contracted premium. Attach the Release Table &amp; Proforma Invoice to the letter.']},
+ {n:'Step 3',t:'Send request to Manish / Kalyani (HSBC)',from:'KRG → HSBC',pills:[['brand','Await confirmation']],body:'Email the complete HSBC release package — Release Request Letter + Release Table + Proforma Invoice — to Manish / Kalyani at HSBC.',action:'Wait for HSBC’s release confirmation before customs clearance. Do not start Step 4 until it lands.',docs:[],note:null},
+ {n:'Step 4',t:'Post-release customs docs',from:'KRG',pills:[['good','After HSBC release']],body:'Once HSBC confirms release, prepare the customs documentation:',docs:[{name:'KRG Packing List',loc:'Invoice Sheet → “AA Italy PL”',copy:'KRG OneDrive → KRG OneDrive → Workbooks → Invoice Sheet → Sheet: "AA Italy PL"'},{name:'Steinweg Customs Mandate Letter',loc:'… ITALY → 3. STEINWEG → [Month]',copy:'KRG OneDrive → KRG OneDrive → Metals → METALS 2025 → Ali Billets → VEDANTA → ITALY → 3. STEINWEG → [Month]'}],note:['','The Customs Mandate authorises Steinweg to customs-clear the specified lots on behalf of KRG.']},
+ {n:'Step 5',t:'Email Steinweg to clear & deliver',from:'KRG → Steinweg',pills:[['brand','Customs package']],body:'Send the release email to Steinweg (distribution list under Contacts) with the full customs package attached:',docs:[{name:'KRG Packing List',loc:'',copy:''},{name:'Customs Mandate Letter',loc:'',copy:''},{name:'Vedanta Commercial Invoice',loc:'',copy:''},{name:'Vedanta COA (Certificate of Analysis)',loc:'',copy:''},{name:'Vedanta Packing List',loc:'',copy:''}],note:['warn','The SOP calls this the “six-document customs package” but names five — verify nothing is missing against last month’s Steinweg email before sending. After sending: Steinweg returns customs doc + invoice (KRG remits funds, value date the following week), then delivers and sends a Delivery Confirmation.']},
+ {n:'Step 6',t:'Delivery confirmation from Steinweg',from:'Steinweg',pills:[['good','Close the loop']],body:'Once delivered, Steinweg shares a Delivery Confirmation stating the lots delivered and the delivery date.',action:'Record the delivery dates in the Release Table — the delivery date anchors the payment due date under the customer’s terms.',docs:[],note:null}
+];
+var CHECK=[{t:'Storage Confirmations',d:'Enter data from Steinweg Storage Confirmations into the Arrivals sheet.'},{t:'Release tonnage from HSBC',d:'Prepare Release Table, Proforma Invoice and HSBC Release Request Letter per the client list. Submit to HSBC.'},{t:'Customs docs',d:'Once HSBC release comes, prepare Packing List and Customs Mandate Letter.'},{t:'Send email to Steinweg',d:'Email the six-document customs package to Steinweg using the distribution list.'},{t:'Final Invoice',d:'Await email from Victoria to send the Final Invoice. Use the MTM sheet to check FX and price before finalising.'},{t:'(Reserved)',d:'',reserved:true},{t:'Pay duty invoices',d:'Process Steinweg duty invoices in the AP sheet and remit funds.'},{t:'Chase AR dues',d:'Follow up on overdue receivables per the AR tracker, coordinating with Victoria.'},{t:'Send OBLs',d:'Send Original Bills of Lading to Steinweg for incoming shipments (2nd-half-of-month arrivals).'},{t:'Vedanta coordination',d:'Mid-month coordination with Vedanta on production updates and next month’s shipping plan.'}];
+
+function build(){
+ var stepper=F.stepperSection('it-localops','03','Local operations — Italy','The core monthly release workflow: from Steinweg storage confirmation through HSBC release, customs clearance and delivery. Click a step. <b>HSBC release must land before customs clearance begins.</b>',STEPS);
+ var checklist=F.checklistSection('it-checklist','07','Monthly operational checklist','Key actions in sequence for each monthly cycle, from the Releases sheet. Ticks are saved in this browser — reset at the start of a new month.',CHECK);
+ var filesS=F.filesSection('it-files','10','Files & locations','Every template mapped to its exact location. Search by document name and copy the path.',FILES);
+ var html='';
+ /* overview */
+ var ov='<div class="flow-banner"><span class="fb-dot" style="background:#b06a24"></span><div><div class="fb-t">Italy Flow — Agency structure</div><div class="fb-s">Victoria SRL acts as agent of Vedanta; KRG finances, contracts customers and carries the credit risk. Pricing in EUR.</div></div></div>';
+ ov+='<div class="stats">'+[['KRG margin','USD 19<small>/MT</small>',''],['Victoria commission','USD 7<small>/MT</small>',''],['Transit India → Italy','~68<small> days</small>','Ships 1st wk of month after production'],['LC issuing bank','HSBC','Release approval gates delivery'],['Pricing currency','EUR','All Italian end customers'],['Cost reconciliation','Quarterly','Via monthly sales premium']].map(function(s){return '<div class="stat"><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div>'+(s[2]?'<div class="n">'+s[2]+'</div>':'')+'</div>';}).join('')+'</div>';
+ ov+='<div class="card"><h3>Parties &amp; roles</h3><p class="lead">Who does what — and where title and credit risk sit.</p>'+dtable(['Party','Role','Key responsibilities'],[
+  [{html:'<b>Vedanta</b>'},{html:'Producer / shipper',cls:'wrap'},{html:'Produces &amp; ships into Italy. No direct contract with end customers. Bears all sale-execution costs (material mgmt, customs duty, detention &amp; demurrage, freight), reconciled quarterly with recoveries in the monthly premium. Sells to KRG on CIF/CFR.',cls:'wrap'}],
+  [{html:'<b>KRG</b>'},{html:'Financier &amp; contractual party',cls:'wrap'},{html:'Contractual counterparty to all end customers. Underwrites credit risk, approves &amp; manages credit limits, signs &amp; manages sales contracts, invoicing, AR and AP. Coordinates release via Steinweg. Pays Vedanta by LC. Earns ~USD 19/MT.',cls:'wrap'}],
+  [{html:'<b>Victoria SRL</b>'},{html:'Commercial agent',cls:'wrap'},{html:'Agent of Vedanta. Holds customer relationships — negotiation and collection support. No title or inventory risk. Market intelligence. Earns USD 7/MT.',cls:'wrap'}],
+  [{html:'<b>Steinweg</b>'},{html:'Logistics &amp; compliance',cls:'wrap'},{html:'Discharge, warehousing, trucking, customs clearance &amp; duty management. VAT fiscal representative for KRG; manages CBAM compliance.',cls:'wrap'}],
+  [{html:'<b>HSBC / Lorca / IHC</b>'},{html:'Financing / LC',cls:'wrap'},{html:'Issues Letters of Credit and holds security over warehoused inventory. <b>Release approval from HSBC is required before any material can be customs-cleared and delivered.</b>',cls:'wrap'}]
+ ])+'</div>';
+ ov+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Ports of delivery</h3><p class="lead">All shipments arrive CIF/CIP at:</p>'+ticks(['<b>Genoa</b> — primary volume','<b>Livorno</b> — wire rods','<b>Trieste</b> — wire rods for De Angeli','<b>Naples / Salerno</b> — primary volume'])+'</div>'+
+  '<div class="card"><h3>Key commercial parameters</h3>'+kv([['KRG margin','~ USD 19/MT'],['Victoria commission','USD 7/MT'],['Transit (India → Italy)','~ 68 days'],['Shipping cadence','1st week, month after production'],['Quotation period','Avg M-0 / Avg 1st–25th M-0 — per contract'],['Payment to Vedanta','LC (HSBC) / CAD (HSBC, IHC)']])+'</div></div>';
+ ov+='<div class="card" style="margin-top:14px"><h3>Flow of goods &amp; funds</h3><p class="lead">Goods ship from Vedanta, handled by Steinweg, released to customers on KRG’s instruction. Customers are invoiced by and pay KRG.</p><div class="flow">'+
+  '<div class="flow-row"><div class="flow-node"><div class="fn-h"><span class="fn-t">Vedanta</span><span class="fn-tag">Producer</span></div><ul><li>Produces &amp; ships goods</li><li>Bears all costs (duty, demurrage…)</li><li>Reconciled quarterly via premium</li></ul></div><div class="flow-node"><div class="fn-h"><span class="fn-t">KRG</span><span class="fn-tag">Contractual party</span></div><ul><li>Contracts &amp; invoices customers</li><li>Manages receivables &amp; credit</li><li>Earns ~$19/MT</li></ul></div></div>'+
+  '<div class="flow-arrow">↓</div>'+
+  '<div class="flow-row"><div class="flow-node"><div class="fn-h"><span class="fn-t">Victoria SRL</span><span class="fn-tag">Agent</span></div><ul><li>Customer relationships</li><li>Supports commercial matters</li><li>Earns $7/MT commission</li></ul></div><div class="flow-node"><div class="fn-h"><span class="fn-t">Steinweg</span><span class="fn-tag">Logistics</span></div><ul><li>Discharge &amp; warehousing</li><li>Trucking to customers</li><li>VAT rep for KRG · CBAM &amp; customs</li></ul></div></div>'+
+  '<div class="flow-arrow">↓</div>'+
+  '<div class="flow-row" style="grid-template-columns:1fr"><div class="flow-node" style="border-color:var(--accent)"><div class="fn-h"><span class="fn-t">Customers</span><span class="fn-tag">End buyers</span></div><ul><li>Receive goods · pay KRG directly (EUR)</li></ul></div></div></div></div>';
+ html+=sec('it-overview','01','Overview','The Italy Flow is the aluminium billets and wire-rod programme between Vedanta (producer), KRG (financier &amp; contractual counterparty) and Victoria SRL (commercial agent). Everything a stand-in needs to run the monthly cycle.',ov);
+ /* buyside */
+ html+=sec('it-buyside','02','Buy-side operations','Pre-shipment planning through to LC issuance; monthly cycle tied to Vedanta’s production quota.',
+  '<div class="grid g3"><div class="card"><h3>Monthly tonnage confirmation</h3>'+stepsOl(['Vedanta, KRG &amp; Victoria jointly confirm materials (grade, diameter, tonnage) for the next month.','Tonnages set from the production quota against confirmed sales / market intelligence.','KRG confirms material on the ground and each customer’s credit-limit status.','Victoria feeds in commercial context and demand to inform allocation.'])+'</div>'+
+  '<div class="card"><h3>Letter of Credit issuance</h3>'+stepsOl(['KRG opens LCs via HSBC on confirmed tonnage, matched to final sales contracts &amp; Vedanta invoices.','LC request letter uses the standard HSBC template.','LC terms are CIF or CFR to the relevant Italian port.'])+'<div class="callout">Template: '+pathRef('… ITALY → 5. HSBC → [Month Year]','KRG OneDrive → KRG OneDrive → Metals → METALS 2025 → Ali Billets → VEDANTA → ITALY → 5. HSBC → [Month Year]')+'</div></div>'+
+  '<div class="card"><h3>Shipment &amp; transit</h3>'+stepsOl(['Vedanta ships in the first week of the month after production (July quota → 1st week August).','Transit India → Italy is ~68 days.','Original BLs (OBLs) go to Steinweg to enable discharge; BL status tracked in the Arrivals sheet.'])+'</div></div>');
+ /* localops */
+ html+=stepper.html;
+ /* sellside */
+ html+=sec('it-sellside','04','Sell-side operations','Offer through final invoice. KRG contracts customers directly; each sale ties to a buy-side P-contract.',
+  '<div class="grid g2"><div class="card"><h3>Offer preparation</h3>'+stepsOl(['Vedanta &amp; Victoria decide tonnage and premiums per customer.','KRG confirms material on the ground and the customer’s credit limit.','Victoria communicates the offer to the customer.'])+'</div>'+
+  '<div class="card"><h3>Contract execution</h3>'+stepsOl(['On confirmation, KRG shares the KRG Sales Contract directly with the buyer.','Each contract gets a unique S-number, linked to its P-contract.'])+'<div class="callout">Billets <span class="ref"><span class="txt">S1294ALB</span></span> · Rod <span class="ref"><span class="txt">S1276ALR</span></span> → e.g. <span class="ref"><span class="txt">P1260ALB</span></span></div></div></div>'+
+  '<div class="card" style="margin-top:14px"><h3>Invoicing</h3>'+stepsOl(['On delivery of all material and final pricing (QP average + premium), KRG generates the Final Commercial Invoice.','Use the <b>MTM (Mark-to-Market) sheet</b> to verify FX and commodity prices before finalising.','Final Invoice goes to the Victoria team, who forward it to the customer.','Due dates run from the delivery date on Steinweg’s Delivery Confirmation.'])+'</div>'+
+  '<div class="card" style="margin-top:14px"><h3 class="withtag">Pricing sheet <span class="pill flat">Italy_Flow.xlsm → “Pricing”</span></h3>'+coldef([['S Number','KRG sales contract reference (e.g. S1294ALB)'],['Customer','End buyer name'],['Quota','Delivery quota month'],['QP','Quotation period / pricing basis'],['CCY','Currency (EUR for all Italian customers)'],['Tonnage','Contracted tonnage in MT'],['Lots','Number of container lots'],['Premium','Premium over LME in EUR/MT (e.g. 485; 850 wire rod)'],['Payment Terms','Terms from delivery date (Net 30/60/70/90)'],['P number','Linked purchase contract reference']])+'</div>');
+ /* receivables */
+ html+=sec('it-receivables','05','Accounts receivable','Tracked in the AR sheet. KRG coordinates with Victoria to keep payments on time.',
+  '<div class="grid g2"><div class="card"><h3 class="withtag">AR chasing protocol <span class="pill warn">Act early</span></h3>'+stepsOl(['Begin chasing at least <b>5 business days before</b> the due date.','Escalate through Victoria if the customer is unresponsive.','Any delay beyond terms → escalate to senior management for credit-limit review.','Coordinate with Victoria throughout to secure timely payment.'])+'</div>'+
+  '<div class="card"><h3 class="withtag">AR tracker <span class="pill flat">“AR”</span></h3>'+coldef([['CUSTOMER','End buyer (Profilati, IRCE, Alex…)'],['DELIVERY Q','Delivery quota month'],['NET TONNAGE','Net tonnage delivered in MT'],['PRICE','Final invoiced price per MT'],['TOTAL AMOUNT','Total invoice value'],['PAYMENT TERM','60/30/70 days net, or 100% prepayment'],['INV No.','KRG final invoice number (IN1715F)'],['DUE DATE','Delivery + terms, or “Prompt”']])+'</div></div>');
+ /* payables */
+ html+=sec('it-payables','06','Accounts payable','Steinweg duty invoices and logistics charges in the AP sheet. Vedanta purchase invoices settle through the LC via HSBC.',
+  '<div class="grid g2"><div class="card"><h3>AP processing workflow</h3>'+stepsOl(['Receive customs documents and invoices from Steinweg.','Process the invoices in the AP sheet.','Remit funds with a value date in the following week.','Vedanta purchase invoices settle through the LC via HSBC.','Reconcile AP monthly; flag discrepancies to finance within 3 business days.'])+'</div>'+
+  '<div class="card"><h3 class="withtag">AP tracker <span class="pill flat">“AP”</span></h3>'+coldef([['INV Number','Steinweg invoice number (25024484)'],['Inv Value','Invoice value in EUR'],['Grand Total','Sum of all invoices in the batch'],['Value Date','Target remittance value date'],['Counterparty','Payee name (Steinweg)']])+'</div></div>');
+ /* checklist */
+ html+=checklist.html;
+ /* trackers */
+ html+=sec('it-trackers','08','Tracker templates','Column structures for the workbook sheets — keep every column populated.',
+  '<div class="card"><h3 class="withtag">Arrivals tracker <span class="pill flat">“Arrivals”</span></h3>'+coldef([['PORT OF DELIVERY','GENOA, LIVORNO, TRIESTE or SALERNO'],['QUOTA MONTH','Production month (Aug-2025)'],['DELIVERY MONTH','Arrival month in Italy (Nov-2025)'],['BL NUMBER','Bill of Lading (MEDUKD441821)'],['DIAMETER','Product spec (6060-30 8″, Wire Rod H12, 6082-12″)'],['ETA','Estimated arrival at port'],['NO. OF CONTAINERS','Count, can be fractional (5.08372)'],['NET WEIGHT','Net weight in MT (127.093)'],['STWG REF','Steinweg reference (GE253601)'],['BL STATUS','“BL Sent to STWG” or blank']])+'</div>'+
+  '<div class="card"><h3 class="withtag">Release table <span class="pill brand">21 columns</span> <span class="pill flat">“Ex - Release Table”</span></h3><p class="lead">Maps container lots (PB numbers) to customers, contracts and invoices. All columns populated.</p>'+coldef([['Warehouse','Storage location (GENOA, ITALY)'],['P-Contract','Purchase contract ref (P1270ALB)'],['Customer','End buyer (Gastaldello SpA)'],['Quota','Quota month'],['Size','Billet diameter (7 Inch)'],['Inco Term','Delivery terms (DDP Povegliano Veronese)'],['BL Number','Bill of Lading'],['Steinweg Ref','Warehouse reference (GE251527)'],['PB Number','Container ref from Storage Confirmation (1261349)'],['Dispatch Seq','Sequential dispatch no. per release'],['Net Weight','Net weight per lot (MT)'],['Gross Weight','Gross weight per lot (MT)'],['Bundle Qty','Number of bundles'],['Pieces Qty','Number of pieces'],['Line No. (P Inv)','Proforma invoice line number'],['P Inv No.','Proforma invoice number (IN1786P)'],['Line No. (F Inv)','Final invoice line number'],['F Inv No.','Final invoice number'],['Price','Final price (at final invoice stage)'],['Date Delivered','Actual delivery date'],['Due Date','Delivery date + payment terms']])+'<p class="cols-note">The delivery date anchors the payment due date — record it for every dispatch.</p></div>'+
+  '<div class="card"><h3 class="withtag">Releases tracker <span class="pill flat">“Releases”</span></h3>'+coldef([['S Number','Sales contract ref'],['Customer','End buyer'],['Quota','Quota month'],['Tonnage','Allocated tonnage (MT)'],['Lots','Containers / lots'],['Premium','Premium (EUR/MT)'],['Payment Terms','Full description'],['P number','Linked purchase contract ref']])+'</div>');
+ /* contacts */
+ html+=sec('it-contacts','09','Contacts','The release-email distribution list and financing contacts. Copy a single address or a whole TO/CC line.',
+  F.contactsCard('Steinweg release email','Ex - Stwg Email',STEINWEG,{lead:'Standard distribution for the customs/release package to Steinweg.',tools:true})+
+  '<div class="grid g2" style="margin-top:14px"><div class="card"><h3>HSBC — release approval</h3><p class="lead">Send the HSBC release package (Release Request Letter + Release Table + Proforma Invoice) and await confirmation before customs clearance.</p><div class="contact-row"><span class="cx-role to">HSBC</span><span class="cx-name">Manish</span></div><div class="contact-row"><span class="cx-role to">HSBC</span><span class="cx-name">Kalyani</span></div><p class="cols-note">Addresses aren’t in the SOP — use the current HSBC contact list / last month’s release email.</p></div>'+
+  '<div class="card"><h3>KRG — internal</h3><div style="margin-top:6px">'+STEINWEG.filter(function(c){return c[2]==='KRG';}).map(function(c){return '<div class="contact-row"><span class="cx-name">'+esc(c[1])+'</span><span class="cx-mail"><span class="em">'+esc(c[3])+'</span><button class="copy-btn" data-copy="'+esc(c[3])+'">Copy</button></span></div>';}).join('')+'</div></div></div>');
+ /* files */
+ html+=filesS.html;
+ /* customers */
+ html+=sec('it-customers','11','Customer credit book','Approved KRG credit limits from the Credit Insurance register, with VAT codes. Check a customer’s limit before finalising any release.',
+  '<div class="search-bar"><label class="search-in">'+F.searchSVG+'<input type="text" id="itCustSearch" placeholder="Search by name or VAT code…" autocomplete="off"></label><span class="search-meta"><b id="itCustCount">0</b> shown · total <b id="itCustTotal">—</b></span></div><div class="table-wrap" style="max-height:560px;overflow:auto"><table class="data"><thead><tr><th>Customer</th><th>VAT code</th><th style="text-align:right">KRG limit (EUR)</th><th style="width:28%">&nbsp;</th></tr></thead><tbody id="itCustBody"></tbody></table></div><p class="cols-note">NOVELLINI SRL shows 0.00 — treat as no approved cover. PROFILATI SPA limit reflects the 3,000,000 figure from the credit register.</p>');
+
+ return {html:html,nav:NAV,init:function(scope){
+  F.wireStepper(scope,'it-localops',STEPS);
+  F.wireChecklist(scope,{id:'it-checklist',key:'if_check_it',items:CHECK});
+  F.wireFiles(scope,'it-files',FILES);
+  F.wireContactCopyAll(scope,STEINWEG);
+  /* credit */
+  var maxL=CUST.reduce(function(m,c){return Math.max(m,c[2])},0);
+  var body=scope.querySelector('#itCustBody'),inp=scope.querySelector('#itCustSearch'),cnt=scope.querySelector('#itCustCount'),tot=scope.querySelector('#itCustTotal');
+  function draw(q){q=(q||'').trim().toLowerCase();var rows='',shown=0,total=0;
+   CUST.forEach(function(c){var hide=q&&(c[0]+' '+c[1]).toLowerCase().indexOf(q)===-1;if(!hide){shown++;total+=c[2];}var pct=maxL?c[2]/maxL*100:0,z=c[2]===0;
+    rows+='<tr class="'+(hide?'hide':'')+'"><td class="wrap" style="font-weight:600;white-space:normal;min-width:160px">'+esc(c[0])+(z?' <span class="pill bad" style="margin-left:4px">No cover</span>':'')+'</td><td><span class="mono">'+esc(c[1])+'</span></td><td class="num">'+F.fmt2.format(c[2])+'</td><td><span class="limit-bar" style="width:'+pct.toFixed(1)+'%;'+(z?'background:var(--bad)':'')+'"></span></td></tr>';});
+   body.innerHTML=rows;cnt.textContent=shown;tot.textContent='€'+F.fmt2.format(total);}
+  inp.addEventListener('input',function(){draw(this.value);});draw('');
+ }};
+}
+F.FLOWS.italy={label:'Italy Flow',sub:'Italy agency · Vedanta – KRG – Victoria SRL',build:build};
+})();
+</script>
+<script>
+(function(){
+var F=window.__F,esc=F.esc,sec=F.sec,dtable=F.dtable,coldef=F.coldef,kv=F.kv,stepsOl=F.stepsOl,ticks=F.ticks,pathRef=F.pathRef;
+
+var NAV=[['ht-overview','01','Overview'],['ht-buyside','02','Buy-side & premium'],['ht-trade','03','Trade confirmation'],['ht-logistics','04','Logistics & release'],['ht-sellside','05','Sell-side execution'],['ht-settlement','06','Invoicing & settlement'],['ht-compliance','07','Compliance'],['ht-contacts','08','Contacts'],['ht-files','09','Files & locations']];
+var HDISTRO=[['TO','Ignacio Bravo','Hartree','ibravo@hartreepartners.com'],['TO','Antonia Bucknall','Hartree','abucknall@hartreepartners.com'],['TO','Luke Freeland','Hartree','lfreeland@hartreepartners.com'],['CC','EMEA Base Metals Merchanting','Hartree','emeabasemetalsmerchanting@hartreepartners.com'],['CC','Refined Metals Trading','Hartree','refinedmetalstrading@hartreepartners.com'],['CC','Lucas Darcie','KRG','Lucas.Darcie@konexusresources.com'],['CC','Aakash Anand','KRG','Aakash.anand@konexusresources.com'],['CC','Metal Ops','KRG','MetalOps@konexusresources.com']];
+var TXN=[['TO','Manish Parmar','KRG','Manish.p@konexusresources.com'],['TO','Kalyani Perla','KRG','Kalyani.Perla@konexusresources.com'],['TO','Pranathi Gadamsetty','KRG','Pranathi.Gadamsetty@konexusresources.com'],['TO','Lucas Darcie','KRG','Lucas.Darcie@konexusresources.com'],['CC','Sindhura Modali','KRG','Sindhura.Modali@konexusresources.com'],['CC','Aakash Anand','KRG','Aakash.anand@konexusresources.com'],['CC','Konexus Finance','KRG','finance@konexusresources.com']];
+var HFILES=[['Hartree Calc (premium build-up)','Konexus Resources Group\\Konexus Central - Documents\\0-Worktops\\Aakash\\Shared\\Hartree Calc.xls'],['Purchase & Exp Sheet (AP tracker)','Konexus Resources Group\\Workbooks - Documents\\Purchase and Exp Sheet.xlsx'],['Trade Summary (AP processing request)','Konexus Resources Group\\Konexus Central - Documents\\0-Worktops\\Aakash\\Shared\\Trade_Summary.xls'],['Sell-side contracts folder','Konexus Resources Group\\Metals - Documents\\2026\\Al Rods\\KRG KAI']];
+var HSTEPS=[
+ {n:'Step 1',t:'Discharge & storage',from:'Steinweg',pills:[['flat','Duty-unpaid']],body:'Steinweg discharges the cargo from the vessel and holds it in warehouse (duty-unpaid / duty-paid), pending a buy-back request — to the order of Hartree and the account of Hartree.',docs:[],note:null},
+ {n:'Step 2',t:'Release approval',from:'Hartree / HSBC',pills:[['warn','Gate before customs']],body:'Material cannot be customs-cleared or delivered until <b>Hartree release approval</b> is obtained for the financed tonnage. KRG’s bank (HSBC) release approval also applies before customs clearance and delivery.',docs:[],note:null},
+ {n:'Step 3',t:'Customs clearance & duty',from:'Steinweg',pills:[['brand','VAT rep + CBAM']],body:'On release, Steinweg clears customs and manages duty payment (if required). Steinweg also acts as KRG’s VAT fiscal representative and manages CBAM reporting (see Compliance).',docs:[],note:null},
+ {n:'Step 4',t:'Delivery',from:'Steinweg / haulier',pills:[['good','Final release']],body:'Steinweg / haulier trucks or ships the cleared (or uncleared) material to the end customer against the final warehouse release.',docs:[],note:null},
+ {n:'Step 5',t:'Transport document',from:'Steinweg → KRG',pills:[['good','Close the loop']],body:'A CMR / Bill of Lading is issued and shared with KRG against each type of transport / shipment.',action:'File the CMR/BL against the trade for the audit trail.',docs:[],note:['tbc','To be confirmed: document the operational trigger points KRG uses to instruct Steinweg (release order, delivery instruction) and the internal owner for each step, so the logistics leg is fully auditable.']}
+];
+
+function contactsBlock(wrapId,title,tag,list,lead){return '<div id="'+wrapId+'">'+F.contactsCard(title,tag,list,{lead:lead,tools:true})+'</div>';}
+
+function build(){
+ var logi=F.stepperSection('ht-logistics','04','Logistics, release & delivery','Steinweg runs the physical and customs leg. <b>Release approval (Hartree, and HSBC as KRG’s bank) must land before customs clearance and delivery.</b>',HSTEPS);
+ var filesS=F.filesSection('ht-files','09','Files & locations','Where the Hartree Rod Flow workbooks and templates live. Copy a path with one click.',HFILES);
+ var html='';
+ /* overview */
+ var ov='<div class="flow-banner"><span class="fb-dot" style="background:#17707f"></span><div><div class="fb-t">Hartree Rod Flow — Buy-back structure</div><div class="fb-s">KRG markets KAI-origin wire rod to EU / North Africa. Hartree finances and holds the goods; KRG buys back specific tonnage against confirmed demand, then sells on.</div></div></div>';
+ ov+='<div class="stats">'+[['KRG margin / commission','USD 30<small>/MT</small>',''],['Hartree commission','USD 30<small>/MT</small>',''],['Transit Bahrain → EU','~35<small> days</small>','Varies by routing'],['Buy-back payment','Net 45<small> days</small>','From release date, 100% cash'],['Hartree currency','USD','Customer: USD / EUR'],['Payment to KAI','Quarterly','Reconciliation']].map(function(s){return '<div class="stat"><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div>'+(s[2]?'<div class="n">'+s[2]+'</div>':'')+'</div>';}).join('')+'</div>';
+ ov+='<div class="card"><h3>Parties &amp; roles</h3><p class="lead">KRG is the trader/marketer; Hartree finances and holds the goods; KAI produces.</p>'+dtable(['Party','Role','Key responsibilities'],[
+  [{html:'<b>KAI</b>'},{html:'Producer / shipper',cls:'wrap'},{html:'Producer &amp; shipper of goods into the EU. Supplies material under the arrangement with Hartree on a CIF basis. No direct contractual relationship with end customers.',cls:'wrap'}],
+  [{html:'<b>Hartree</b>'},{html:'Financier',cls:'wrap'},{html:'Bears all import-execution costs (material handling, customs duty, detention &amp; demurrage) and coordinates release via Steinweg. KRG pays Hartree under the buy-back model against credit terms covered by underwritten credit insurance on KRG.',cls:'wrap'}],
+  [{html:'<b>KRG</b>'},{html:'Trader / marketer',cls:'wrap'},{html:'Manages all customer-facing commercial activity — relationships, negotiation and collection. Provides underwritten credit limits to end customers; supports KAI with market intelligence and liaison. Earns USD 30/MT on goods sold.',cls:'wrap'}],
+  [{html:'<b>Steinweg</b>'},{html:'Logistics &amp; compliance',cls:'wrap'},{html:'Discharge, warehousing, trucking, customs clearance &amp; duty management. VAT fiscal representative for KRG; manages CBAM compliance.',cls:'wrap'}],
+  [{html:'<b>HSBC</b>'},{html:'Financing bank',cls:'wrap'},{html:'KRG’s bank — receivable discounting and inventory financing. <b>HSBC release approval is required before any material can be customs-cleared and delivered.</b>',cls:'wrap'}]
+ ])+'</div>';
+ ov+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Ports of delivery</h3><p class="lead">Material arrives CIF/CIP (per shipment) at:</p>'+dtable(['Port','Volume'],[['Rotterdam, Netherlands','Primary volume'],['Trieste, Italy','Primary volume'],['Salerno, Italy','Secondary'],['Barcelona, Spain','Secondary']])+'<div class="callout tbc"><b>Verify.</b> The source draft referenced “Italian ports / Vedanta” in places; corrected here to four EU ports with KAI as producer — confirm the correct producer name and port list.</div></div>'+
+  '<div class="card"><h3>Key commercial parameters</h3>'+kv([['KRG margin / commission','USD 30/MT'],['Hartree commission','USD 30/MT'],['Transit (Bahrain → EU)','~ 35 days (varies by routing)'],['Hartree currency','USD'],['Customer currency','USD / EUR'],['Quotational period','Customer QP always back-to-back with Hartree'],['Payment to KAI','Quarterly reconciliation']])+'</div></div>';
+ ov+='<div class="card" style="margin-top:14px"><h3>Flow of goods &amp; funds</h3>'+stepsOl(['KAI ships material to an EU port and sells to Hartree on CIF terms.','Hartree imports and funds it; Steinweg discharges, stores, and holds the goods duty-unpaid.','KRG requests a buy-back of specific tonnage against confirmed customer demand.','Following HSBC release approval, Steinweg clears customs, pays duty, and delivers to the end customer.','KRG invoices the end customer and pays Hartree under the buy-back on agreed credit terms; KAI is settled on a quarterly reconciliation.'])+
+  '<div style="margin-top:14px">'+ticks(['KAI maintains production focus while outsourcing customer management to KRG.','KRG enables the trade by absorbing credit risk and running operations for a fixed margin.','Hartree leverages its financing lines without bearing production or end-customer credit exposure.'])+'</div></div>';
+ html+=sec('ht-overview','01','Overview','The Hartree Rod Flow is the aluminium wire-rod buy-back programme between KAI (producer), Hartree Partners UK (financier) and KRG (EU marketing entity). KRG-SOP-ROD-001 v1.0.',ov);
+ /* buyside + premium */
+ var bs='<div class="card"><h3>Tonnage confirmation</h3>'+stepsOl(['KRG confirms the material (grade, diameter, tonnage) to buy back from Hartree for the specific request.','Hartree confirms availability on the ground; KRG confirms the credit-limit status of each customer before tonnage is finalised.','KRG communicates the commercial context and customer demand to Hartree for allocation.'])+'</div>';
+ bs+='<div class="card"><h3>Premium calculation</h3><p class="lead">The buy-back premium = provisional premium + the pass-through costs Hartree incurs while holding the goods (handling, financing interest, storage, Hartree fee). Figures below are the indicative worked example (USD/MT).</p>'+
+  dtable([{t:'Provisional',r:true},{t:'Handling / etc.',r:true},{t:'Financing',r:true},{t:'Storage',r:true},{t:'Hartree fee',r:true},{t:'Total / MT',r:true}],[[{html:'250',cls:'num'},{html:'38',cls:'num'},{html:'201',cls:'num'},{html:'49',cls:'num'},{html:'30',cls:'num'},{html:'<b>569</b>',cls:'num'}]])+
+  '<div class="grid g2" style="margin-top:14px"><div><div class="pill flat" style="margin-bottom:8px">Financing (interest) build-up</div>'+kv([['BL date','24-Dec'],['Release date','12-Dec'],['SOFR + 250 bps','6.7173%'],['Financing days','353'],['Financing tonnage','68 MT'],['Financing price','3,095.50 USD/MT'],['Financing amount','210,494.00 USD'],['Annualised interest','14,139.51 USD'],['Interest / day','38.74 USD'],['Total interest','13,674.65 USD'],['Interest / MT','201 USD']])+'</div>'+
+  '<div><div class="pill flat" style="margin-bottom:8px">Storage build-up</div>'+kv([['Storage date','09-Mar'],['Release date','28-Oct'],['Number of days','233'],['Storage cost','EUR 0.18 / day / MT = 42'],['Storage cost','49 USD / day / MT']])+
+  '<div class="callout tbc" style="margin-top:14px"><b>Note.</b> Illustrative worked-example figures (note the example BL / release dates). Recalculate each live deal in the Rod Flow workbook from its own BL date, SOFR fixing, tonnage and storage period.</div></div></div>'+
+  '<div class="callout">Source: '+pathRef('… Aakash\\Shared\\Hartree Calc.xls','Konexus Resources Group\\Konexus Central - Documents\\0-Worktops\\Aakash\\Shared\\Hartree Calc.xls')+'</div></div>';
+ html+=sec('ht-buyside','02','Buy-side & premium','Advising Hartree of a buy-back request, agreeing the premium, and formalising the purchase from Hartree into KRG.',bs);
+ /* trade confirmation */
+ var tc='<div class="card"><h3 class="withtag">Trade confirmation — term sheet <span class="pill flat">representative</span></h3><p class="lead">The buy-back purchase from Hartree into KRG is confirmed on these terms; deal-specific fields are completed per transaction.</p>'+
+  kv([['Trade Ref.','[per transaction]'],['Seller','Hartree Partners UK Limited'],['Buyer','Konexus Resources Group Limited'],['Material','1370 Aluminium Wire Rod (9.5 mm diameter)'],['Temper','H11'],['Brand (origin)','Konexus (Bahrain)'],['Quantity','400 MT (+/- 2% in Seller’s option)'],['Status','Duty unpaid, customs uncleared, VAT unpaid'],['Shipment period','Oct-26'],['Delivery terms','In-Warehouse (Incoterms 2020), Rotterdam, Netherlands'],['Price','LME official cash settlement (Primary Aluminium) over the QP, plus the Premium'],['Quotational period','AHD LME CSP average 1 Nov – 16 Nov 2026 (both included)'],['Premium','US$ 550 / MT'],['Payment','100% net cash by wire, net 45 days from release date, against (1) Seller’s commercial invoice; (2) Final warehouse release'],['Risk','As per Incoterms 2020'],['Title','Transfers upon Final Release'],['Others','Mutually agreed GTCs govern; all other terms per the Purchase Contract dated 02 July 2025.']])+
+  '<div class="callout">Buy-back requests, tonnage and trade confirmations are circulated to the Hartree distribution list — see <b>Contacts</b>. KRG recipients are always copied.</div></div>';
+ html+=sec('ht-trade','03','Trade confirmation','The representative buy-back term sheet between Hartree (Seller) and KRG (Buyer).',tc);
+ /* logistics */
+ html+=logi.html;
+ /* sellside */
+ var ss='<div class="card"><h3>Customer contract terms</h3><p class="lead">KRG contracts the end customer on terms that mirror the buy-back, keeping the quotational period back-to-back so the margin is preserved.</p>'+
+  kv([['Seller','Konexus Resources Group'],['Buyer','End customer (EU / North Africa)'],['Material','1370 Aluminium Wire Rod (9.5 mm), Temper H11, Konexus (Bahrain) origin'],['Delivery terms','In-Warehouse / delivered, Incoterms 2020'],['Price basis','LME official cash settlement (Primary Aluminium) over the QP, plus KRG’s sell-side premium'],['Quotational period','Back-to-back with the Hartree buy-back QP'],['Currency','USD / EUR'],['Title & risk','Transfer per Incoterms 2020 / upon final release'],['Credit','Sales only within the underwritten credit limit confirmed for the customer']])+
+  '<div class="callout tbc"><b>To be confirmed.</b> Insert KRG’s standard customer payment terms and the governing GTC / contract template used for the sell-side leg.</div>'+
+  '<div class="callout">Contracts folder: '+pathRef('… Al Rods\\KRG KAI','Konexus Resources Group\\Metals - Documents\\2026\\Al Rods\\KRG KAI')+'</div></div>';
+ html+=sec('ht-sellside','05','Sell-side execution','KRG contracts the end customer back-to-back with the Hartree buy-back QP.',ss);
+ /* settlement */
+ var st='<div class="card"><h3>Accounts payable (KRG → Hartree / Steinweg)</h3>'+ticks(['KRG pays Hartree under the buy-back on agreed credit terms, covered by underwritten credit insurance on KRG.','Buy-back payment is 100% net cash by wire, net 45 days from the release date, against Hartree’s commercial invoice and the final warehouse release.','Steinweg’s logistics, storage and customs-clearance invoices are settled through the AP process.'])+
+  '<div style="margin-top:12px">'+coldef([['INV Number','Steinweg/Hartree invoice number (25024484)'],['Inv Value','Invoice value in EUR'],['Grand Total','Sum of all invoices in the batch'],['Value Date','Target remittance value date'],['Counterparty','Payee (Hartree / Steinweg)']])+'</div>'+
+  '<div class="callout">AP tracker: '+pathRef('Purchase and Exp Sheet.xlsx','Konexus Resources Group\\Workbooks - Documents\\Purchase and Exp Sheet.xlsx')+'</div>'+
+  '<div style="margin-top:12px"><b style="font-size:13px">AP workflow</b>'+stepsOl(['Process the invoices in the Purchase &amp; Exp sheet.','Remit funds with a value date in the following week.','Reconcile all AP items monthly; flag discrepancies to finance within 3 business days.'])+'</div></div>';
+ st+='<div class="card"><h3>AP processing request — transaction snapshot</h3><p class="lead">Each payment request is circulated as a full snapshot covering both the purchase (buy-back) and sale legs. Representative example — Aluminium Rods · Contract 195362088 · Hartree Partners (UK) Limited · Sale S1426ALR · Elkateh · 72.173 MT.</p>'+
+  '<div class="grid g2"><div><div class="pill flat" style="margin-bottom:8px">Purchase side (buy-back from Hartree)</div>'+kv([['Contract reference','195362088'],['Counterparty','Hartree Partners (UK) Limited'],['Purchase incoterm','ExW Trieste'],['Tonnage','72.173 MT'],['Currency','USD'],['Invoice No.','715509-1'],['Quotational period','AVG Oct 2026'],['Amount','USD 252,324.75'],['Due date','09-Nov-26'],['Payment terms','Net 7 days from release date']])+'</div>'+
+  '<div><div class="pill flat" style="margin-bottom:8px">Sale side (to end customer)</div>'+kv([['Contract reference','S1426ALR'],['Counterparty','Elkateh'],['Incoterm','FCA Trieste'],['Tonnage','72.173 MT'],['Currency','USD'],['Quotational period','AVG Oct 2026'],['Amount','USD 272,172.61'],['Payment terms','100% against Conditional Release']])+'</div></div>'+
+  '<div class="callout">Snapshot workbook: '+pathRef('Trade_Summary.xls','Konexus Resources Group\\Konexus Central - Documents\\0-Worktops\\Aakash\\Shared\\Trade_Summary.xls')+' · circulated to the transaction-summary recipients (see Contacts).</div></div>';
+ st+='<div class="grid g2"><div class="card"><h3>Accounts receivable (customer → KRG)</h3>'+ticks(['KRG invoices the end customer on final pricing once the QP is known, within the underwritten credit limit.','Receivables may be discounted under the HSBC facility; collection remains KRG’s responsibility.'])+
+  '<div style="margin-top:10px"><b style="font-size:13px">AR chasing protocol</b>'+stepsOl(['Begin payment chasing at least 5 business days before the due date.','Escalate promptly if the customer is unresponsive.','Escalate any delay beyond the credit terms to senior management for a credit-limit review.'])+'</div></div>'+
+  '<div class="card"><h3>Settlement to KAI</h3>'+ticks(['KAI is settled on a quarterly reconciliation covering the tonnage sold in the period.','KRG retains its USD 30/MT commission on goods sold.'])+
+  '<div class="callout tbc"><b>To be confirmed.</b> Invoice issuance timing relative to the QP fixing, the reconciliation calendar with KAI, and the owner for each settlement leg.</div></div></div>';
+ html+=sec('ht-settlement','06','Invoicing, settlement & receivables','Three legs — payables (KRG → Hartree / Steinweg), receivables (customer → KRG), and the quarterly settlement to KAI.',st);
+ /* compliance */
+ html+=sec('ht-compliance','07','Regulatory compliance','VAT representation and CBAM for imported material, both handled by Steinweg on KRG’s behalf.',
+  '<div class="grid g2"><div class="card"><h3>VAT representation</h3><p class="lead" style="margin-bottom:0">Steinweg acts as KRG’s VAT fiscal representative in the market of import, handling VAT registration and reporting arising from the duty-unpaid storage and subsequent clearance.</p></div>'+
+  '<div class="card"><h3>CBAM</h3><p class="lead" style="margin-bottom:0">Steinweg manages CBAM compliance for imported material — collecting embedded-emissions data and filing the required reporting. KRG ensures origin and emissions documentation is obtained from KAI in time to meet reporting deadlines.</p></div></div>'+
+  '<div class="callout tbc"><b>To be confirmed.</b> The specific CBAM reporting cadence and the data KRG must provide to (or obtain from) Steinweg and KAI for each shipment.</div>');
+ /* contacts */
+ html+=sec('ht-contacts','08','Contacts','The Hartree distribution list (buy-back requests, tonnage and trade confirmations) and the transaction-summary recipients for payment requests.',
+  contactsBlock('ht-con1','Hartree distribution list','Rod Flow workbook',HDISTRO,'Buy-back requests, tonnage confirmations and trade confirmations. KRG recipients are always copied.')+
+  '<div style="margin-top:14px">'+contactsBlock('ht-con2','Transaction-summary recipients','AP processing request',TXN,'Full transaction summary is sent here for confirmation and payment.')+'</div>');
+ /* files */
+ html+=filesS.html;
+
+ return {html:html,nav:NAV,init:function(scope){
+  F.wireStepper(scope,'ht-logistics',HSTEPS);
+  F.wireFiles(scope,'ht-files',HFILES);
+  var c1=scope.querySelector('#ht-con1');if(c1)F.wireContactCopyAll(c1,HDISTRO);
+  var c2=scope.querySelector('#ht-con2');if(c2)F.wireContactCopyAll(c2,TXN);
+ }};
+}
+F.FLOWS.hartree={label:'Hartree Rod Flow',sub:'Hartree buy-back · KAI – Hartree Partners UK – KRG',build:build};
+
+/* ================= ENGINE ================= */
+var root=document.documentElement;
+var railNav=document.getElementById('railNav'),docEl=document.getElementById('doc'),mastSub=document.getElementById('mastSub');
+var spy=null,current=null;
+function buildRail(nav){railNav.innerHTML='<div class="rail-h">Sections</div>'+nav.map(function(n){return '<a href="#'+n[0]+'"><span class="rn">'+n[1]+'</span>'+esc(n[2])+'</a>';}).join('');}
+function setActive(id){railNav.querySelectorAll('a').forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+id);});}
+function renderFlow(id,targetSection){
+ if(!F.FLOWS[id])id='italy';current=id;
+ root.setAttribute('data-flow',id);
+ document.querySelectorAll('[data-flow-pick]').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-flow-pick')===id?'true':'false');});
+ var out=F.FLOWS[id].build();
+ docEl.innerHTML=out.html;
+ buildRail(out.nav);
+ if(mastSub)mastSub.textContent=F.FLOWS[id].sub;
+ try{out.init(docEl);}catch(e){}
+ LS_set('if_lastflow',id);
+ if(spy)spy.disconnect();
+ var secs=out.nav.map(function(n){return document.getElementById(n[0]);}).filter(Boolean);
+ spy=new IntersectionObserver(function(ents){ents.forEach(function(en){if(en.isIntersecting)setActive(en.target.id);});},{rootMargin:'-45% 0px -50% 0px',threshold:0});
+ secs.forEach(function(s){spy.observe(s);});
+ railNav.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(ev){ev.preventDefault();var sid=a.getAttribute('href').slice(1),el=document.getElementById(sid);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'','#'+sid);setActive(sid);}});});
+ if(targetSection){var t=document.getElementById(targetSection);if(t){setTimeout(function(){t.scrollIntoView({block:'start'});},60);setActive(targetSection);history.replaceState(null,'','#'+targetSection);}}
+ else{setActive(out.nav[0][0]);window.scrollTo(0,0);}
+}
+function LS_set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function LS_get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+document.querySelectorAll('[data-flow-pick]').forEach(function(b){b.addEventListener('click',function(){renderFlow(b.getAttribute('data-flow-pick'));});});
+window.addEventListener('hashchange',function(){var h=(location.hash||'').slice(1);if(!h)return;var fl=h.indexOf('ht-')===0?'hartree':h.indexOf('it-')===0?'italy':null;if(fl&&fl!==current)renderFlow(fl,h);else{var el=document.getElementById(h);if(el){el.scrollIntoView({block:'start'});setActive(h);}}});
+
+/* boot */
+(function(){var h=(location.hash||'').slice(1);
+ if(h.indexOf('ht-')===0){renderFlow('hartree',h);return;}
+ if(h.indexOf('it-')===0){renderFlow('italy',h);return;}
+ var last=LS_get('if_lastflow');renderFlow(last==='hartree'?'hartree':'italy');})();
+})();
+</script>
+</body>
+</html>
